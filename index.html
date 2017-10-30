@@ -1,0 +1,104 @@
+<html>
+	<head>
+		<title>Pinterest integration for design brief  - Hack Days - 99designs</title>
+		<style>
+			#pinBoard {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+			}
+
+			li {
+				background-repeat: no-repeat;
+				background-size: cover;
+				height: 100px;
+				width: 100px;
+				margin: 5px;
+			}
+		</style>
+	</head>
+	<body>
+
+		<button id="myButton">
+		  authorize pinterest
+		</button>
+
+		<button id="getPins">
+		  get pins
+		</button>
+
+		<div>
+			<ul id="pinBoard">
+
+			</ul>
+		</div>
+		<script>
+			window.pAsyncInit = function() {
+			    PDK.init({
+			        appId: "4931129421879849649", // Replace this with your app ID
+			        cookie: true
+			    });
+			};
+
+			(function(d, s, id) {
+			    var js,
+			        pjs = d.getElementsByTagName(s)[0];
+			    if (d.getElementById(id)) {
+			        return;
+			    }
+			    js = d.createElement(s);
+			    js.id = id;
+			    js.src = "//assets.pinterest.com/sdk/sdk.js";
+			    pjs.parentNode.insertBefore(js, pjs);
+			})(document, "script", "pinterest-jssdk");
+
+			window.onload = function() {
+			    var login = function() {
+			        PDK.login(
+			            {
+			                scope: "read_public",
+			                cookie: true,
+			                redirect_uri: "https://localhost:4443/"
+			            },
+			            function(response) {
+			                if (!response || response.error) {
+			                    alert("Error occurred");
+			                } else {
+			                    console.log(response);
+			                }
+			            }
+			        );
+			    };
+
+			    var authButton = document.getElementById("myButton");
+			    authButton.addEventListener("click", login);
+			    var getPins = function(query) {
+			        var pins = [];
+
+			        PDK.request(`/boards/${query}/pins/`, 'GET', {fields: ['id', 'image']}, function(response) {
+			            if (!response || response.error) {
+			                alert("Error occurred");
+			            } else {
+			                pins = pins.concat(response.data);
+							var pinBoard = document.getElementById("pinBoard")
+							pins.forEach(function(pin) {
+								var li = document.createElement('li')
+								li.style.backgroundImage = `url(${pin.image.original.url})`
+								pinBoard.appendChild(li)
+							});
+			                // if (response.hasNext) {
+			                //     response.next(); // this will recursively go to this same callback
+							// }
+			            }
+			        });
+			        return pins;
+			    };
+
+			    var getPinsButton = document.getElementById("getPins");
+			    getPinsButton.addEventListener("click", function() {
+			        getPins("kaelacooper12/foxes");
+			    });
+			};
+		</script>
+	</body>
+</html>
